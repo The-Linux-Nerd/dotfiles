@@ -1,0 +1,133 @@
+{
+    // "layer": "top", // Waybar at top layer
+    // "position": "bottom", // Waybar position (top|bottom|left|right)
+    "height": 24, // Waybar height (to be removed for auto height)
+    // "width": 1280, // Waybar width
+    "spacing": 2, // Gaps between modules (4px)
+    // Choose the order of the modules
+    "modules-left": ["river/tags"],
+    "modules-center": [""],
+    "modules-right": ["custom/media", "custom/pipewire", "network", "memory", "temperature", "backlight", "keyboard-state", "battery", "clock", "tray"],
+   // },
+    "keyboard-state": {
+        "numlock": true,
+        "capslock": false,
+        "format": "{name} {icon}",
+        "format-icons": {
+            "locked": "",
+            "unlocked": ""
+        }
+    },
+    "river/tags": {
+        "num-tags": 5
+    },
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "",
+            "deactivated": ""
+        }
+    },
+    "tray": {
+        // "icon-size": 21,
+        "spacing": 10
+    },
+    "clock": {
+        "timezone": "America/Chicago",
+        "format": "{:%I:%M%p}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "format-alt": "{:%m-%d-%Y}"
+    },
+    "cpu": {
+        "format": "{usage}% ",
+        "tooltip": false
+    },
+    "memory": {
+        "format": "{}% "
+    },
+    "temperature": {
+        // "thermal-zone": 2,
+        // "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
+        "critical-threshold": 80,
+        // "format-critical": "{temperatureC}°C {icon}",
+        "format": "{temperatureC}°C {icon}",
+        "format-icons": ["", "", ""]
+    },
+    "backlight": {
+        // "device": "acpi_video1",
+        "format": "{percent}%",
+        "on-click": "light -A 15",
+        "on-click-right": "light -U 15"
+    },
+    "battery": {
+        "states": {
+            // "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{capacity}% {icon}",
+        "format-charging": "{capacity}% ",
+        "format-plugged": "{capacity}% ",
+        "format-alt": "{time} {icon}",
+        // "format-good": "", // An empty format will hide the module
+        // "format-full": "",
+        "format-icons": ["", "", "", "", ""]
+    },
+    "network": {
+        // "interface": "wlp2*", // (Optional) To force the use of this interface
+        "format-wifi": "{signalStrength}% ",
+        "format-ethernet": "{ipaddr}/{cidr} ",
+        "tooltip-format": "{essid} via {gwaddr} ",
+        "format-linked": "{ifname} (No IP) ",
+        "format-disconnected": "Disconnected ⚠",
+        "format-alt": "{ifname}: {ipaddr}/{cidr}"
+    },
+    "custom/pipewire": {
+        "exec": "pw-volume status",
+        "on-scroll-up":"pw-volume change +1%; pkill -RTMIN+8 waybar",
+        "on-scroll-down": "pw-volume change -1%; pkill -RTMIN+8 waybar",
+        "return-type": "json",
+        "interval": "once",
+        "signal": 8,
+        "format": "{icon} {percentage}",
+        "format-icons": {
+            "mute": "",
+            "default": ["", "", ""]
+        }
+    },
+//    "custom/media": {
+//        "format": "{icon}",
+ //       "tooltip": "{}",
+ //       "format-icons": {
+ //           "spotify": "",
+ //           "default": "🎜"
+ //       },
+ //       "escape": true,
+ //       "return-type": "json",
+ //       "max-length": 40,
+ //       "on-click": "playerctl play-pause",
+ //       "on-click-right": "playerctl stop",
+ //       "smooth-scrolling-threshold": 10, // This value was tested using a trackpad, it should be lowered if using a mouse.
+ //       "on-scroll-up": "playerctl next",
+ //       "on-scroll-down": "playerctl previous",
+//
+ //       "exec": "/home/qrow/.config/waybar/reosurces/custom_modules/mediaplayer.py 2> /dev/null" // Script in resources folder
+ //       // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+ //   }
+    "custom/media": {
+        "format": "{} {icon}",
+        "return-type": "json",
+        "format-icons": {
+            "Playing": " ",
+           "Paused": " ",
+       },
+       "max-length":25,
+      "exec": "playerctl -a metadata --format '{\"text\": \"\", \"tooltip\": \"{{artist}} - {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
+       "on-click": "playerctl play-pause",
+       "on-click-right": "playerctl stop",
+       "smooth-scrolling-threshold": 10, // This value was tested using a trackpad, it should be lowered if using a mouse.
+       "on-scroll-up": "playerctl next",
+       "on-scroll-down": "playerctl previous"
+   }
+}
+
