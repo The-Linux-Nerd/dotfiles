@@ -22,7 +22,6 @@ export LESSHISTFILE=-
 # Fixing Paths
 export ELINKS_CONFDIR="$XDG_CONFIG_HOME/elinks"
 export DVDCSS_CACHE="$XDG_DATA_HOME"/dvdcss
-export GIT_DIR="$XDG_DATA_HOME/.git"
 export GEM_PATH="$XDG_DATA_HOME/ruby/gems"
 export GEM_SPEC_CACHE="$XDG_DATA_HOME/ruby/specs"
 export GEM_HOME="$XDG_DATA_HOME/ruby/gems"
