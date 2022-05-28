@@ -1,0 +1,204 @@
+# Fancy zsh colors
+autoload -U colors && colors
+
+#NO FUCKING BEEPS!
+unsetopt BEEP
+
+# Prompt
+# https://github.com/romkatv/gitstatus
+source ~/.config/zsh/gitstatus/gitstatus.plugin.zsh
+getGitStatus() {
+    # Check if use is inside a git repo
+    if ! { gitstatus_query MY && [[ $VCS_STATUS_RESULT == ok-sync ]] }
+    then
+        echo -n ""
+        return
+    fi
+
+    # define colors
+    local clean="%{$fg[green]%}"
+    local modified="%{$fg[yellow]%}"
+    local untracked="%{$fg[blue]%}"
+    local conflicted="%{$fg[red]%}"
+
+    # copied from gitstatus.prompt.zsh
+    local p
+
+    local where  # branch name, tag or commit
+    if [[ -n $VCS_STATUS_LOCAL_BRANCH ]]; then
+        where=" on   $VCS_STATUS_LOCAL_BRANCH"
+    elif [[ -n $VCS_STATUS_TAG ]]; then
+        p+='%f#'
+        where=" on   $VCS_STATUS_TAG"
+    else
+        p+='%f@'
+        where=" on    ${VCS_STATUS_COMMIT[1,8]}"
+    fi
+
+    (( $#where > 32 )) && where[13,-13]="…"  # truncate long branch names and tags
+    p+="${clean}${where//\%/%%}"             # escape %
+
+    (( VCS_STATUS_COMMITS_BEHIND )) && p+=" ${clean}⇣${VCS_STATUS_COMMITS_BEHIND}"
+    (( VCS_STATUS_COMMITS_AHEAD && !VCS_STATUS_COMMITS_BEHIND )) && p+=" "
+    (( VCS_STATUS_COMMITS_AHEAD  )) && p+="${clean}⇡${VCS_STATUS_COMMITS_AHEAD}"
+    (( VCS_STATUS_PUSH_COMMITS_BEHIND )) && p+=" ${clean}⇠${VCS_STATUS_PUSH_COMMITS_BEHIND}"
+    (( VCS_STATUS_PUSH_COMMITS_AHEAD && !VCS_STATUS_PUSH_COMMITS_BEHIND )) && p+=" "
+    (( VCS_STATUS_PUSH_COMMITS_AHEAD  )) && p+="${clean}⇢${VCS_STATUS_PUSH_COMMITS_AHEAD}"
+    (( VCS_STATUS_STASHES        )) && p+=" ${clean}*${VCS_STATUS_STASHES}"
+    [[ -n $VCS_STATUS_ACTION     ]] && p+=" ${conflicted}${VCS_STATUS_ACTION}"
+    (( VCS_STATUS_NUM_CONFLICTED )) && p+=" ${conflicted}~${VCS_STATUS_NUM_CONFLICTED}"
+    (( VCS_STATUS_NUM_STAGED     )) && p+=" ${modified}+${VCS_STATUS_NUM_STAGED}"
+    (( VCS_STATUS_NUM_UNSTAGED   )) && p+=" ${modified}!${VCS_STATUS_NUM_UNSTAGED}"
+    (( VCS_STATUS_NUM_UNTRACKED  )) && p+=" ${untracked}?${VCS_STATUS_NUM_UNTRACKED}"
+
+    # Echo the git status
+    echo -n "${p}%f"
+}
+
+getParent() {
+    # Get the name of the parent command
+    comm_name="$(ps -p $PPID -o comm=)"
+    PARENT=""
+    # Ignore if kitty
+    if [ $comm_name != "kitty" ]; then PARENT="[\e[2m\e[3m$comm_name\e[0m%{$fg[cyan]%}]"; fi
+    echo $PARENT
+}
+
+getPrompt() {
+    PROMPT="%{$fg[cyan]%}╭─"
+    PROMPT+=$(getParent)
+    PROMPT+="[%B%{$fg[blue]%}%n%{$fg[cyan]%}@%{$fg[blue]%}%m%{$fg[cyan]%}: %~%b%{$fg[cyan]%}]%{$reset_color%}"
+    PROMPT+=$(getGitStatus)
+    PROMPT+="
+%{$fg[cyan]%}╰─%(!.#.$)%{$reset_color%} "
+    setopt no_prompt_{bang,subst} prompt_percent  # enable/disable correct prompt expansions
+}
+
+# launch the prompt
+gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd getPrompt
+
+# Environment variables
+export _JAVA_AWT_WM_NONREPARENTING=1        # fix java sway apps
+export SAL_USE_VCLPLUGIN=gtk2
+export QT_QPA_PLATFORMTHEME=qt5ct
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=242"  # zsh-autosuggestions colors
+
+# fzf-tab
+# disable sort when completing `git checkout`
+zstyle ':completion:*:git-checkout:*' sort false
+# set descriptions format to enable group support
+zstyle ':completion:*:descriptions' format '[%d]'
+# set list-colors to enable filename colorizing
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# preview directory's content with exa when completing cd
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+# switch group using `,` and `.`
+zstyle ':fzf-tab:*' switch-group ',' '.'
+
+
+# Aliases
+alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
+alias tree="exa --icons -T"
+alias vim='nvim'
+alias ssh='TERM=xterm-256color ssh' # So ssh works properly with kitty
+alias cp='cp -i'                    # Confirm before overwriting something
+alias rm='rm -i'                     # Confirm before removing!
+alias 'rm -rf'='rm -rfi'
+alias df='df -h'
+alias du='du . -h -d1 2>/dev/null | sort -hr'
+alias cd..='cd ..'
+alias icat='kitty +kitten icat'
+alias locate='plocate'
+alias z='zoxide'
+alias lofi='mpv --no-video "https://youtube.com/watch?v=5qap5aO4i9A"'
+
+# commands i dont want saved
+alias cl=' clear'
+alias clear=' clear'
+alias lc=' ls --color=none'
+alias ls=' exa --icons'                              # Fancy ls
+alias la=' exa --icons -lgaa --git --color-scale'    # Fancy ls -la
+alias ll=' exa --icons -lg --git --color-scale'       # Fancy ls -l
+alias mv=' mv'
+
+
+# autocorrect
+eval $(thefuck --alias)
+
+# keybinds
+# create a zkbd compatible hash;
+# to add other keys to this hash, see: man 5 terminfo
+typeset -g -A key
+
+key[Home]="${terminfo[khome]}"
+key[End]="${terminfo[kend]}"
+key[Insert]="${terminfo[kich1]}"
+key[Backspace]="${terminfo[kbs]}"
+key[Delete]="${terminfo[kdch1]}"
+key[Up]="${terminfo[kcuu1]}"
+key[Down]="${terminfo[kcud1]}"
+key[Left]="${terminfo[kcub1]}"
+key[Right]="${terminfo[kcuf1]}"
+key[PageUp]="${terminfo[kpp]}"
+key[PageDown]="${terminfo[knp]}"
+key[Shift-Tab]="${terminfo[kcbt]}"
+key[Control-Left]="${terminfo[kLFT5]}"
+key[Control-Right]="${terminfo[kRIT5]}"
+
+# setup key accordingly
+[[ -n "${key[Home]}"      ]] && bindkey -- "${key[Home]}"       beginning-of-line
+[[ -n "${key[End]}"       ]] && bindkey -- "${key[End]}"        end-of-line
+[[ -n "${key[Insert]}"    ]] && bindkey -- "${key[Insert]}"     overwrite-mode
+[[ -n "${key[Backspace]}" ]] && bindkey -- "${key[Backspace]}"  backward-delete-char
+[[ -n "${key[Delete]}"    ]] && bindkey -- "${key[Delete]}"     delete-char
+[[ -n "${key[Up]}"        ]] && bindkey -- "${key[Up]}"         up-line-or-history
+[[ -n "${key[Down]}"      ]] && bindkey -- "${key[Down]}"       down-line-or-history
+[[ -n "${key[Left]}"      ]] && bindkey -- "${key[Left]}"       backward-char
+[[ -n "${key[Right]}"     ]] && bindkey -- "${key[Right]}"      forward-char
+[[ -n "${key[PageUp]}"    ]] && bindkey -- "${key[PageUp]}"     beginning-of-buffer-or-history
+[[ -n "${key[PageDown]}"  ]] && bindkey -- "${key[PageDown]}"   end-of-buffer-or-history
+[[ -n "${key[Shift-Tab]}" ]] && bindkey -- "${key[Shift-Tab]}"  autosuggest-accept
+[[ -n "${key[Control-Left]}"  ]] && bindkey -- "${key[Control-Left]}"  backward-word
+[[ -n "${key[Control-Right]}" ]] && bindkey -- "${key[Control-Right]}" forward-word
+
+
+### Added by Zinit's installer
+if [[ ! -f $HOME/.zinit/bin/zinit.zsh ]]; then
+    print -P "%F{33}▓▒░ %F{220}Installing %F{33}DHARMA%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
+    command mkdir -p "$HOME/.zinit" && command chmod g-rwX "$HOME/.zinit"
+    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.zinit/bin" && \
+        print -P "%F{33}▓▒░ %F{34}Installation successful.%f%b" || \
+        print -P "%F{160}▓▒░ The clone has failed.%f%b"
+fi
+
+source "$HOME/.zinit/bin/zinit.zsh"
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+
+# Load a few important annexes, without Turbo
+# (this is currently required for annexes)
+zinit light-mode for \
+    zdharma-continuum/z-a-rust \
+    zdharma-continuum/z-a-as-monitor \
+    zdharma-continuum/z-a-patch-dl \
+    zdharma-continuum/z-a-bin-gem-node
+
+### End of Zinit's installer chunk
+
+# zsh plugins
+zinit wait lucid blockf for \
+    atinit"zicompinit; zicdreplay" \
+    atload"_zsh_autosuggest_start" \
+    zsh-users/zsh-autosuggestions \
+    Aloxaf/fzf-tab \
+    zdharma-continuum/fast-syntax-highlighting \
+    hlissner/zsh-autopair \
+    arzzen/calc.plugin.zsh \
+    MichaelAquilina/zsh-auto-notify
+
+
+# fnm
+export PATH=/home/qrow/.fnm:$PATH
+eval "`fnm env`"
