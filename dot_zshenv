@@ -20,6 +20,7 @@ export PAGER="less"
 export LESSHISTFILE=-
 
 # Fixing Paths
+export CARGO_HOME="$XDG_DATA_HOME"/cargo
 export ELINKS_CONFDIR="$XDG_CONFIG_HOME/elinks"
 export DVDCSS_CACHE="$XDG_DATA_HOME"/dvdcss
 export GEM_PATH="$XDG_DATA_HOME/ruby/gems"
